@@ -5,15 +5,15 @@ var router = express.Router();
 const CyclicDb = require("@cyclic.sh/dynamodb")
 const db = CyclicDb("weak-tuna-attireCyclicDB")
 
-const users = db.collection("users")
+const presentes = db.collection("presentes")
 
 router.get('/list', async function(req, res, next) {
 	try{
-		let list = await users.list(99)
+		let list = await presentes.list(99)
 		let tmp = []
 
 		list = await (list.results || []).reduce(async (old, curr) =>  {
-			let item = await users.get(curr.key)
+			let item = await presentes.get(curr.key)
 			tmp.push(item)
 
 			old = tmp
@@ -30,7 +30,7 @@ router.get('/list', async function(req, res, next) {
 router.get('/by/:key', async function(req, res, next) {
 	try{
 		let key = req.params.key
-		let item = await users.get(key)
+		let item = await presentes.get(key)
 
 		res.json(item)
 
@@ -43,9 +43,9 @@ router.post('/create', async function(req, res, next) {
 	try{
 		let params = {...req.body}
 		let key = md5(params.nome)
-
-		await users.set(key, params)
-		let item = await users.get(key)
+		
+		await presentes.set(key, params)
+		let item = await presentes.get(key)
 
 		// console.log("item", item)
 
@@ -61,8 +61,8 @@ router.patch('/edit/:key', async function(req, res, next) {
 		let params = {...req.body}
 		let key = req.params.key
 
-		await users.set(key, params)
-		let item = await users.get(key)
+		await presentes.set(key, params)
+		let item = await presentes.get(key)
 
 		// console.log("item", item)
 
@@ -76,7 +76,7 @@ router.patch('/edit/:key', async function(req, res, next) {
 router.delete('/delete/:key', async function(req, res, next) {
 	try{
 		let key = req.params.key
-		await users.delete(key)
+		await presentes.delete(key)
 
 		res.send('Deletado com sucesso!')
 
