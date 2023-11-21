@@ -3,7 +3,7 @@ var express = require('express');
 var router = express.Router();
 
 const CyclicDb = require("@cyclic.sh/dynamodb")
-const db = CyclicDb("weak-tuna-attireCyclicDB")
+const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
 
 const presentes = db.collection("presentes")
 
