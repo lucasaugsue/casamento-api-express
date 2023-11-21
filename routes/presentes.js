@@ -7,6 +7,21 @@ const db = CyclicDb("weak-tuna-attireCyclicDB")
 
 const presentes = db.collection("presentes")
 
+function validacaoPresente (params) {
+	try{
+		if(!params.nome) throw new Error("É preciso do nome!") 
+		if(!params.url) throw new Error("É preciso da url!")
+		if(!params.preco) throw new Error("É preciso do preço!")
+		if(!params.descricao) throw new Error("É preciso da descrição!")
+		
+		return {error: false, msg: "ok"}
+	}catch(err){
+
+		return {error: true, msg: err}
+	}
+
+}
+
 router.get('/list', async function(req, res, next) {
 	try{
 		let list = await presentes.list(99)
@@ -43,6 +58,10 @@ router.post('/create', async function(req, res, next) {
 	try{
 		let params = {...req.body}
 		let key = md5(params.nome)
+		let validacao = {error: false, msg: ""}
+		
+		validacao = validacaoPresente(params)
+		if(validacao.error) throw new Error(validacao.msg)
 		
 		await presentes.set(key, params)
 		let item = await presentes.get(key)
@@ -60,6 +79,10 @@ router.patch('/edit/:key', async function(req, res, next) {
 	try{
 		let params = {...req.body}
 		let key = req.params.key
+		let validacao = {error: false, msg: ""}
+		
+		validacao = validacaoPresente(params)
+		if(validacao.error) throw new Error(validacao.msg)
 
 		await presentes.set(key, params)
 		let item = await presentes.get(key)
