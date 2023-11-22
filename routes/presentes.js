@@ -29,7 +29,15 @@ router.get('/list', async function(req, res, next) {
 
 		list = await (list.results || []).reduce(async (old, curr) =>  {
 			let item = await presentes.get(curr.key)
-			tmp.push(item)
+			tmp.push({
+				key: item.key,
+				nome: item.props.nome,
+				preco: item.props.preco,
+				descricao: item.props.descricao,
+				url: item.props.url,
+				updated: item.props.updated,
+				created: item.props.created,
+			})
 
 			old = tmp
 			return old 
