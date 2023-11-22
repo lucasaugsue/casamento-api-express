@@ -55,7 +55,15 @@ router.get('/by/:key', async function(req, res, next) {
 		let key = req.params.key
 		let item = await presentes.get(key)
 
-		res.json(item)
+		res.json({
+			key: item.key,
+			nome: item.props.nome,
+			preco: item.props.preco,
+			descricao: item.props.descricao,
+			url: item.props.url,
+			updated: item.props.updated,
+			created: item.props.created,
+		})
 
 	}catch(err) {
 		res.send(`Um erro aconteceu: ${err}`)
