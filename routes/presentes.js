@@ -34,6 +34,7 @@ router.get('/list', async function(req, res, next) {
 				nome: item.props.nome,
 				preco: item.props.preco,
 				descricao: item.props.descricao,
+				mais_informacoes: item.props.mais_informacoes,
 				url: item.props.url,
 				updated: item.props.updated,
 				created: item.props.created,
@@ -60,6 +61,7 @@ router.get('/by/:key', async function(req, res, next) {
 			nome: item.props.nome,
 			preco: item.props.preco,
 			descricao: item.props.descricao,
+			mais_informacoes: item.props.mais_informacoes,
 			url: item.props.url,
 			updated: item.props.updated,
 			created: item.props.created,
@@ -75,7 +77,7 @@ router.post('/create', async function(req, res, next) {
 		let params = {...req.body}
 		let key = md5(params.nome)
 		let validacao = {error: false, msg: ""}
-		
+
 		validacao = validacaoPresente(params)
 		if(validacao.error) throw new Error(validacao.msg)
 		
