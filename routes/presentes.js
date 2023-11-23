@@ -78,6 +78,14 @@ router.post('/create', async function(req, res, next) {
 		let key = md5(params.nome)
 		let validacao = {error: false, msg: ""}
 
+		params = {
+			nome: params.nome || "",
+			preco: params.preco || "",
+			descricao: params.descricao || "",
+			mais_informacoes: params.mais_informacoes || "",
+			url: params.url || "",
+		}
+
 		validacao = validacaoPresente(params)
 		if(validacao.error) throw new Error(validacao.msg)
 		
@@ -98,6 +106,14 @@ router.patch('/edit/:key', async function(req, res, next) {
 		let params = {...req.body}
 		let key = req.params.key
 		let validacao = {error: false, msg: ""}
+
+		params = {
+			nome: params.nome || "",
+			preco: params.preco || "",
+			descricao: params.descricao || "",
+			mais_informacoes: params.mais_informacoes || "",
+			url: params.url || "",
+		}
 		
 		validacao = validacaoPresente(params)
 		if(validacao.error) throw new Error(validacao.msg)
