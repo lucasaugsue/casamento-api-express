@@ -6,14 +6,13 @@ var { v4: uuidv4 } = require('uuid');
 const CyclicDb = require("@cyclic.sh/dynamodb")
 const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
 
-const presentes = db.collection("presentes")
+const recados = db.collection("recados")
 
-function validacaoPresente (params) {
+function validacaoRecados (params) {
 	try{
 		if(!params.nome) throw new Error("É preciso do nome!") 
-		if(!params.url) throw new Error("É preciso da url!")
-		if(!params.preco) throw new Error("É preciso do preço!")
-		if(!params.descricao) throw new Error("É preciso da descrição!")
+		if(!params.email) throw new Error("É preciso do email!")
+		if(!params.recado) throw new Error("É preciso do recado!")
 		
 		return {error: false, msg: "ok"}
 	}catch(err){
@@ -25,10 +24,10 @@ function validacaoPresente (params) {
 
 router.get('/list', async function(req, res, next) {
 	try{
-		const { results: presentesMetadata } = await presentes.list();
+		const { results: recadosMetadata } = await recados.list();
 		const list = await Promise.all(
-			presentesMetadata.map(async ({ key }) => (
-				await presentes.get(key)).props
+			recadosMetadata.map(async ({ key }) => (
+				await recados.get(key)).props
 			) 
 		);
 
@@ -42,7 +41,7 @@ router.get('/list', async function(req, res, next) {
 router.get('/by/:id', async function(req, res, next) {
 	try{
 		let id = req.params.id
-		let item = (await presentes.get(id)).props
+		let item = (await recados.get(id)).props
 
 		res.json(item)
 
@@ -62,17 +61,15 @@ router.post('/create', async function(req, res, next) {
 		params = {
 			id: id,
 			nome: params.nome || "",
-			preco: params.preco || "",
-			descricao: params.descricao || "",
-			mais_informacoes: params.mais_informacoes || "",
-			url: params.url || "",
+			email: params.email || "",
+			recado: params.recado || "",
 		}
 
-		validacao = validacaoPresente(params)
+		validacao = validacaoRecados(params)
 		if(validacao.error) throw new Error(validacao.msg)
 		
-		await presentes.set(id, params)
-		let item = await presentes.get(id)
+		await recados.set(id, params)
+		let item = await recados.get(id)
 
 		// console.log("item", item)
 
@@ -89,24 +86,21 @@ router.patch('/edit/:id', async function(req, res, next) {
 		let id = req.params.id
 		let validacao = {error: false, msg: ""}
 
-		let item = await presentes.get(id)
+		let item = await recados.get(id)
 		if(!item) throw new Error("Não foi possível encontrar o id para editar!")
+		// console.log("item", item)
 
 		params = {
 			id: id,
 			nome: params.nome || "",
-			preco: params.preco || "",
-			descricao: params.descricao || "",
-			mais_informacoes: params.mais_informacoes || "",
-			url: params.url || "",
+			email: params.email || "",
+			recado: params.recado || "",
 		}
 		
-		validacao = validacaoPresente(params)
+		validacao = validacaoRecados(params)
 		if(validacao.error) throw new Error(validacao.msg)
 
-		await presentes.set(id, params)
-
-		// console.log("item", item)
+		await recados.set(id, params)
 
 		res.send('Editado com sucesso!')
 
@@ -118,11 +112,11 @@ router.patch('/edit/:id', async function(req, res, next) {
 router.delete('/delete/:id', async function(req, res, next) {
 	try{
 		let id = req.params.id
-
-		let item = await presentes.get(id)
+		
+		let item = await recados.get(id)
 		if(!item) throw new Error("Não foi possível encontrar o id para deletar!")
 		
-		await presentes.delete(id)
+		await recados.delete(id)
 
 		res.send('Deletado com sucesso!')
 

@@ -9,16 +9,12 @@ const users = db.collection("users")
 
 router.get('/list', async function(req, res, next) {
 	try{
-		let list = await users.list(99)
-		let tmp = []
-
-		list = await (list.results || []).reduce(async (old, curr) =>  {
-			let item = await users.get(curr.key)
-			tmp.push(item)
-
-			old = tmp
-			return old 
-		}, [])
+		const { results: usersMetadata } = await users.list();
+		const list = await Promise.all(
+			usersMetadata.map(async ({ key }) => (
+				await users.get(key)).props
+			) 
+		);
 
 		res.json(list)
 
