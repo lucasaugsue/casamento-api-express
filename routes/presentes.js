@@ -1,6 +1,7 @@
 var md5 = require('md5');
 var express = require('express');
 var router = express.Router();
+var { v4: uuidv4 } = require('uuid');
 
 const CyclicDb = require("@cyclic.sh/dynamodb")
 const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
@@ -24,61 +25,42 @@ function validacaoPresente (params) {
 
 router.get('/list', async function(req, res, next) {
 	try{
-		let list = await presentes.list(99)
-		let tmp = []
-
-		list = await (list.results || []).reduce(async (old, curr) =>  {
-			let item = await presentes.get(curr.key)
-			tmp.push({
-				key: item.key,
-				nome: item.props.nome,
-				preco: item.props.preco,
-				descricao: item.props.descricao,
-				mais_informacoes: item.props.mais_informacoes,
-				url: item.props.url,
-				updated: item.props.updated,
-				created: item.props.created,
-			})
-
-			old = tmp
-			return old 
-		}, [])
+		const { results: presentesMetadata } = await presentes.list();
+		const list = await Promise.all(
+			presentesMetadata.map(async ({ key }) => (
+				await presentes.get(key)).props
+			) 
+		);
 
 		res.json(list)
 
 	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
+		res.send(`${err}`)
 	}
 });
 
-router.get('/by/:key', async function(req, res, next) {
+router.get('/by/:id', async function(req, res, next) {
 	try{
-		let key = req.params.key
-		let item = await presentes.get(key)
+		let id = req.params.id
+		let item = (await presentes.get(id)).props
 
-		res.json({
-			key: item.key,
-			nome: item.props.nome,
-			preco: item.props.preco,
-			descricao: item.props.descricao,
-			mais_informacoes: item.props.mais_informacoes,
-			url: item.props.url,
-			updated: item.props.updated,
-			created: item.props.created,
-		})
+		res.json(item)
 
 	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
+		res.send(`${err}`)
 	}
 })
 
 router.post('/create', async function(req, res, next) {
 	try{
+		let uuid = uuidv4()
+		let id = md5(uuid)
+
 		let params = {...req.body}
-		let key = md5(params.nome)
 		let validacao = {error: false, msg: ""}
 
 		params = {
+			id: id,
 			nome: params.nome || "",
 			preco: params.preco || "",
 			descricao: params.descricao || "",
@@ -89,25 +71,26 @@ router.post('/create', async function(req, res, next) {
 		validacao = validacaoPresente(params)
 		if(validacao.error) throw new Error(validacao.msg)
 		
-		await presentes.set(key, params)
-		let item = await presentes.get(key)
+		await presentes.set(id, params)
+		let item = await presentes.get(id)
 
 		// console.log("item", item)
 
 		res.send('Criado com sucesso!')
 
 	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
+		res.send(`${err.message}`)
 	}
 });
 
-router.patch('/edit/:key', async function(req, res, next) {
+router.patch('/edit/:id', async function(req, res, next) {
 	try{
 		let params = {...req.body}
-		let key = req.params.key
+		let id = req.params.id
 		let validacao = {error: false, msg: ""}
 
 		params = {
+			id: params.id,
 			nome: params.nome || "",
 			preco: params.preco || "",
 			descricao: params.descricao || "",
@@ -118,27 +101,27 @@ router.patch('/edit/:key', async function(req, res, next) {
 		validacao = validacaoPresente(params)
 		if(validacao.error) throw new Error(validacao.msg)
 
-		await presentes.set(key, params)
-		let item = await presentes.get(key)
+		await presentes.set(id, params)
+		let item = await presentes.get(id)
 
 		// console.log("item", item)
 
 		res.send('Editado com sucesso!')
 
 	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
+		res.send(`${err}`)
 	}
 });
 
-router.delete('/delete/:key', async function(req, res, next) {
+router.delete('/delete/:id', async function(req, res, next) {
 	try{
-		let key = req.params.key
-		await presentes.delete(key)
+		let id = req.params.id
+		await presentes.delete(id)
 
 		res.send('Deletado com sucesso!')
 
 	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
+		res.send(`${err}`)
 	}
 }); 
 
