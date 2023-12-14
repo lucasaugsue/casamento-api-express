@@ -1,6 +1,7 @@
 var md5 = require('md5');
 var express = require('express');
 var router = express.Router();
+var { v4: uuidv4 } = require('uuid');
 
 const CyclicDb = require("@cyclic.sh/dynamodb")
 const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
@@ -23,12 +24,12 @@ router.get('/list', async function(req, res, next) {
 	}
 });
 
-router.get('/by/:key', async function(req, res, next) {
+router.get('/by/:id', async function(req, res, next) {
 	try{
-		let key = req.params.key
-		let item = await users.get(key)
+		let id = req.params.id
+		let item = await users.get(id)
 
-		res.json(item)
+		res.json({ item: item })
 
 	}catch(err) {
 		res.send(`Um erro aconteceu: ${err}`)
@@ -37,44 +38,53 @@ router.get('/by/:key', async function(req, res, next) {
 
 router.post('/create', async function(req, res, next) {
 	try{
-		let params = {...req.body}
-		let key = md5(params.nome)
+		let uuid = uuidv4()
+		let id = md5(uuid)
 
-		await users.set(key, params)
-		let item = await users.get(key)
+		let params = {
+			id: id,
+			...req.body
+		}
 
-		// console.log("item", item)
+		await users.set(id, params)
+		let item = await users.get(id)
 
-		res.send('Criado com sucesso!')
-
-	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
-	}
-});
-
-router.patch('/edit/:key', async function(req, res, next) {
-	try{
-		let params = {...req.body}
-		let key = req.params.key
-
-		await users.set(key, params)
-		let item = await users.get(key)
-
-		// console.log("item", item)
-
-		res.send('Editado com sucesso!')
+		res.status(201)
+		res.json({
+			item: item,
+			message: 'Criado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`Um erro aconteceu: ${err}`)
 	}
 });
 
-router.delete('/delete/:key', async function(req, res, next) {
+router.patch('/edit/:id', async function(req, res, next) {
 	try{
-		let key = req.params.key
-		await users.delete(key)
+		let params = {...req.body}
+		let id = req.params.id
 
-		res.send('Deletado com sucesso!')
+		await users.set(id, params)
+		let item = await users.get(id)
+
+		res.status(200)
+		res.json({
+			item: item,
+			message: 'Editado com sucesso!'
+		})
+
+	}catch(err) {
+		res.send(`Um erro aconteceu: ${err}`)
+	}
+});
+
+router.delete('/delete/:id', async function(req, res, next) {
+	try{
+		let id = req.params.id
+		await users.delete(id)
+
+		res.json({ message: 'Deletado com sucesso!' })
 
 	}catch(err) {
 		res.send(`Um erro aconteceu: ${err}`)
