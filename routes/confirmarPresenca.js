@@ -11,15 +11,8 @@ const confirmar_presenca = db.collection("confirmar_presenca")
 function validacaoConfirmarPresenca (params) {
 	try{
 		if(!params.nome) throw new Error("É preciso do nome!") 
-		if(!params.email) throw new Error("É preciso do email!")
-		if(!params.lista) throw new Error("É preciso adicionar pessoas na lista!")
-		if(params.lista.length < 1) throw new Error("É preciso adicionar pessoas na lista!")
-
-        let nomeError = params.lista.find(i => !i.nome || i.nome.length < 1)
-		if(nomeError) throw new Error("Alguem na lista está sem nome!")
-
-        let idadeError = params.lista.find(i => !i.idade || i.idade.length < 1)
-		if(idadeError) throw new Error("Alguem na lista está sem idade!")
+		if(!params.celular) throw new Error("É preciso do celular!") 
+		if(!params.idade) throw new Error("É preciso da idade!")
 
 		return {error: false, msg: "ok"}
 	}catch(err){
@@ -50,7 +43,7 @@ router.get('/by/:id', async function(req, res, next) {
 		let id = req.params.id
 		let item = (await confirmar_presenca.get(id)).props
 
-		res.json(item)
+		res.json({ item: item })
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -68,8 +61,8 @@ router.post('/create', async function(req, res, next) {
 		params = {
 			id: id,
 			nome: params.nome || "",
-			email: params.email || "",
-			lista: params.lista || [],
+			idade: params.idade || "",
+			celular: params.celular || "",
 		}
 
 		validacao = validacaoConfirmarPresenca(params)
@@ -78,9 +71,11 @@ router.post('/create', async function(req, res, next) {
 		await confirmar_presenca.set(id, params)
 		let item = await confirmar_presenca.get(id)
 
-		// console.log("item", item)
-
-		res.send('Criado com sucesso!')
+		res.status(201)
+		res.json({
+			item: item,
+			message: 'Criado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err.message}`)
@@ -100,8 +95,8 @@ router.patch('/edit/:id', async function(req, res, next) {
 		params = {
 			id: id,
 			nome: params.nome || "",
-			email: params.email || "",
-			lista: params.lista || [],
+			idade: params.idade || "",
+			celular: params.celular || "",
 		}
 		
 		validacao = validacaoConfirmarPresenca(params)
@@ -109,7 +104,10 @@ router.patch('/edit/:id', async function(req, res, next) {
 
 		await confirmar_presenca.set(id, params)
 
-		res.send('Editado com sucesso!')
+		res.json({
+			item: item,
+			message: 'Editado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -125,7 +123,7 @@ router.delete('/delete/:id', async function(req, res, next) {
 		
 		await confirmar_presenca.delete(id)
 
-		res.send('Deletado com sucesso!')
+		res.json({ message: 'Deletado com sucesso!' })
 
 	}catch(err) {
 		res.send(`${err}`)

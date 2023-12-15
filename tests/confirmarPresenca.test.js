@@ -1,28 +1,28 @@
-// __tests__/recados.test.js
+// __tests__/confirmarPresenca.test.js
 const request = require('supertest');
 const app = require('../app'); // Importe sua aplicação Express
 
 let id = ""
 const objExpect = {
     id: expect.any(String),
-    recado: expect.any(String),
     nome: expect.any(String),
-    email: expect.any(String),
+    celular: expect.any(String),
+    idade: expect.any(String),
     created: expect.any(String),
     updated: expect.any(String),
 }
 
-describe.only('Testando as rotas relacionado a /recados', () => {
+describe.only('Testando as rotas relacionado a /confirmar-presenca', () => {
 
-    test('POST /recados/create cria um novo recado', async () => {
+    test('POST /confirmar-presenca/create cria uma nova presença', async () => {
         const params = {
-            nome: "lucas augsue",
-            email: "lucasaugsue7@gmail.com",
-            recado: "lorem ipslum texto hehe"
+            "nome": "lucas augsue",
+            "celular": "(61)98114-6060",
+            "idade": "21"
         };
       
         const response = await request(app)
-        .post('/recados/create')
+        .post('/confirmar-presenca/create')
         .send(params);
     
         id = response.body.item.props.id
@@ -32,15 +32,15 @@ describe.only('Testando as rotas relacionado a /recados', () => {
         expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
     });
     
-    test("PATCH /recados/edit/:id atualiza um recado existente", async () => {
+    test("PATCH /confirmar-presenca/edit/:id atualiza uma presença existente", async () => {
         const params = {
-            nome: "lucas augsue editado",
-            email: "lucasaugsue7@gmail.com",
-            recado: "mudando o recado"
+            "nome": "lucas augsue (editando nome)",
+            "celular": "(61)98114-6060",
+            "idade": "21"
         };
     
         const response = await request(app)
-        .patch(`/recados/edit/${id}`)
+        .patch(`/confirmar-presenca/edit/${id}`)
         .send(params);
     
         expect(response.status).toBe(200);
@@ -48,8 +48,8 @@ describe.only('Testando as rotas relacionado a /recados', () => {
         expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
     });
     
-    test('GET /recados/list retorna uma lista de recados', async () => {
-        const response = await request(app).get('/recados/list');
+    test('GET /confirmar-presenca/list retorna uma lista de presentes', async () => {
+        const response = await request(app).get('/confirmar-presenca/list');
     
         expect(response.status).toBe(200);
         expect(response.body).toEqual(expect.arrayContaining([
@@ -58,20 +58,20 @@ describe.only('Testando as rotas relacionado a /recados', () => {
     
     }, 30000);
     
-    test('GET /recados/by/:id retorna um item específico dos recados', async () => {
-        const response = await request(app).get(`/recados/by/${id}`);
+    test('GET /confirmar-presenca/by/:id retorna um item específico das presenças', async () => {
+        const response = await request(app).get(`/confirmar-presenca/by/${id}`);
     
         expect(response.status).toBe(200);
         expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
     
-    test('DELETE /recados/delete/:id exclui um recado existente', async () => {
+    test('DELETE /confirmar-presenca/delete/:id exclui uma presença existente', async () => {
       
         const response = await request(app)
-        .delete(`/recados/delete/${id}`);
+        .delete(`/confirmar-presenca/delete/${id}`);
       
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Deletado com sucesso!');
     });
-
+    
 })

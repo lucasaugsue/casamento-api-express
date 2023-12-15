@@ -13,16 +13,6 @@ const objExpect = {
 }
 describe.only('Testando as rotas relacionado a /users', () => {
 
-    test('GET /users/list retorna uma lista de usuários', async () => {
-        const response = await request(app).get('/users/list');
-
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual(expect.arrayContaining([
-            expect.objectContaining(objExpect),
-        ]));
-
-    }, 30000);
-
     test('POST /users/create cria um novo usuário', async () => {
         const params = {
             nome: 'Novo Usuário',
@@ -58,6 +48,16 @@ describe.only('Testando as rotas relacionado a /users', () => {
         expect(response.body.message).toBe('Editado com sucesso!');
         expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
     });
+
+    test('GET /users/list retorna uma lista de usuários', async () => {
+        const response = await request(app).get('/users/list');
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining(objExpect),
+        ]));
+
+    }, 30000);
 
     test('GET /users/by/:id retorna um item específico dos usuários', async () => {
         const response = await request(app).get(`/users/by/${id}`);

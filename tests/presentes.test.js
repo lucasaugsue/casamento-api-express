@@ -16,16 +16,6 @@ const objExpect = {
 
 describe.only('Testando as rotas relacionado a /presentes', () => {
 
-    test('GET /presentes/list retorna uma lista de presentes', async () => {
-        const response = await request(app).get('/presentes/list');
-    
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual(expect.arrayContaining([
-            expect.objectContaining(objExpect),
-        ]));
-    
-    }, 30000);
-    
     test('POST /presentes/create cria um novo presente', async () => {
         const params = {
             "nome": "Cama de casal nipon",
@@ -63,6 +53,16 @@ describe.only('Testando as rotas relacionado a /presentes', () => {
         expect(response.body.message).toBe('Editado com sucesso!');
         expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
     });
+    
+    test('GET /presentes/list retorna uma lista de presentes', async () => {
+        const response = await request(app).get('/presentes/list');
+    
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining(objExpect),
+        ]));
+    
+    }, 30000);
     
     test('GET /presentes/by/:id retorna um item específico dos presentes', async () => {
         const response = await request(app).get(`/presentes/by/${id}`);
