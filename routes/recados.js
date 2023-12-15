@@ -43,7 +43,7 @@ router.get('/by/:id', async function(req, res, next) {
 		let id = req.params.id
 		let item = (await recados.get(id)).props
 
-		res.json(item)
+		res.json({ item: item })
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -71,9 +71,11 @@ router.post('/create', async function(req, res, next) {
 		await recados.set(id, params)
 		let item = await recados.get(id)
 
-		// console.log("item", item)
-
-		res.send('Criado com sucesso!')
+		res.status(201)
+		res.json({
+			item: item,
+			message: 'Criado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err.message}`)
@@ -88,7 +90,6 @@ router.patch('/edit/:id', async function(req, res, next) {
 
 		let item = await recados.get(id)
 		if(!item) throw new Error("Não foi possível encontrar o id para editar!")
-		// console.log("item", item)
 
 		params = {
 			id: id,
@@ -102,7 +103,11 @@ router.patch('/edit/:id', async function(req, res, next) {
 
 		await recados.set(id, params)
 
-		res.send('Editado com sucesso!')
+		res.status(200)
+		res.json({
+			item: item,
+			message: 'Editado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -118,7 +123,7 @@ router.delete('/delete/:id', async function(req, res, next) {
 		
 		await recados.delete(id)
 
-		res.send('Deletado com sucesso!')
+		res.json({ message: 'Deletado com sucesso!' })
 
 	}catch(err) {
 		res.send(`${err}`)
