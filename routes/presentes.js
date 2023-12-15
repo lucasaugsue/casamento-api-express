@@ -44,7 +44,7 @@ router.get('/by/:id', async function(req, res, next) {
 		let id = req.params.id
 		let item = (await presentes.get(id)).props
 
-		res.json(item)
+		res.json({ item: item })
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -74,9 +74,11 @@ router.post('/create', async function(req, res, next) {
 		await presentes.set(id, params)
 		let item = await presentes.get(id)
 
-		// console.log("item", item)
-
-		res.send('Criado com sucesso!')
+		res.status(201)
+		res.json({
+			item: item,
+			message: 'Criado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err.message}`)
@@ -106,9 +108,10 @@ router.patch('/edit/:id', async function(req, res, next) {
 
 		await presentes.set(id, params)
 
-		// console.log("item", item)
-
-		res.send('Editado com sucesso!')
+		res.json({
+			item: item,
+			message: 'Editado com sucesso!'
+		})
 
 	}catch(err) {
 		res.send(`${err}`)
@@ -124,7 +127,7 @@ router.delete('/delete/:id', async function(req, res, next) {
 		
 		await presentes.delete(id)
 
-		res.send('Deletado com sucesso!')
+		res.json({ message: 'Deletado com sucesso!' })
 
 	}catch(err) {
 		res.send(`${err}`)
