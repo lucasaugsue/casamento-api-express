@@ -39,7 +39,7 @@ router.get('/by/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presença não encontrado.' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ item: result.rows[0] });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -82,7 +82,10 @@ router.patch('/edit/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presença não encontrado.' });
         }
 
-		res.json(result.rows[0]);
+		res.json({ 
+            item: result.rows[0],
+            message: 'Editado com sucesso!'
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -98,7 +101,10 @@ router.delete('/delete/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presença não encontrado.' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ 
+            item: result.rows[0],
+            message: 'Deletado com sucesso!'
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message });

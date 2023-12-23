@@ -4,7 +4,7 @@ const app = require('../app'); // Importe sua aplicação Express
 
 let id = ""
 const objExpect = {
-    altura: expect.any(String),
+    id: expect.any(Number),
     created: expect.any(String),
     sexo: expect.any(String),
     nome: expect.any(String),
@@ -18,18 +18,17 @@ describe.only('Testando as rotas relacionado a /users', () => {
             nome: 'Novo Usuário',
             idade: '25',
             sexo: 'feminino',
-            altura: '1.70',
         };
     
         const response = await request(app)
         .post('/users/create')
         .send(params);
 
-        id = response.body.item.props.id
+        id = response.body.item.id
     
         expect(response.status).toBe(201);
         expect(response.body.message).toBe('Criado com sucesso!');
-        expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
+        expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
 
     test("PATCH /users/edit/:id atualiza um usuário existente", async () => {
@@ -37,7 +36,6 @@ describe.only('Testando as rotas relacionado a /users', () => {
             nome: 'Novo Usuário',
             idade: '31',
             sexo: 'feminino',
-            altura: '1.72',
         };
 
         const response = await request(app)
@@ -46,7 +44,7 @@ describe.only('Testando as rotas relacionado a /users', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Editado com sucesso!');
-        expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
+        expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
 
     test('GET /users/list retorna uma lista de usuários', async () => {
@@ -63,7 +61,7 @@ describe.only('Testando as rotas relacionado a /users', () => {
         const response = await request(app).get(`/users/by/${id}`);
 
         expect(response.status).toBe(200);
-        expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
+        expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
 
     test('DELETE /users/delete/:id exclui um usuário existente', async () => {

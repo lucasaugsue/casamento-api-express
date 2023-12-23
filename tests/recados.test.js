@@ -4,7 +4,7 @@ const app = require('../app'); // Importe sua aplicação Express
 
 let id = ""
 const objExpect = {
-    id: expect.any(String),
+    id: expect.any(Number),
     recado: expect.any(String),
     nome: expect.any(String),
     email: expect.any(String),
@@ -25,11 +25,11 @@ describe.only('Testando as rotas relacionado a /recados', () => {
         .post('/recados/create')
         .send(params);
     
-        id = response.body.item.props.id
+        id = response.body.item.id
       
         expect(response.status).toBe(201);
         expect(response.body.message).toBe('Criado com sucesso!');
-        expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
+        expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
     
     test("PATCH /recados/edit/:id atualiza um recado existente", async () => {
@@ -45,7 +45,7 @@ describe.only('Testando as rotas relacionado a /recados', () => {
     
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Editado com sucesso!');
-        expect(response.body.item.props).toEqual(expect.objectContaining(objExpect));
+        expect(response.body.item).toEqual(expect.objectContaining(objExpect));
     });
     
     test('GET /recados/list retorna uma lista de recados', async () => {

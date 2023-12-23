@@ -40,7 +40,28 @@ router.get('/by/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presente não encontrado.' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ item: result.rows[0] });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.post('/create', async function(req, res, next) {
+	try {
+		const { nome, preco, descricao, mais_informacoes, url } = req.body;
+
+		let validacao = {error: false, msg: ""}
+
+		validacao = validacaoPresente(req.body)
+		if(validacao.error) throw new Error(validacao.msg)
+
+        const item = await sql`INSERT INTO presentes (preco, descricao, nome, mais_informacoes, url) VALUES (${preco}, ${descricao}, ${nome}, ${mais_informacoes}, ${url}) RETURNING *`;
+
+        res.status(201).json({
+            item: item.rows[0],
+            message: 'Criado com sucesso!'
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -62,7 +83,10 @@ router.patch('/edit/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presente não encontrado.' });
         }
 
-		res.json(result.rows[0]);
+		res.json({ 
+            item: result.rows[0],
+            message: 'Editado com sucesso!'
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -78,7 +102,10 @@ router.delete('/delete/:id', async function(req, res, next) {
             return res.status(404).json({ error: 'Presente não encontrado.' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ 
+            item: result.rows[0],
+            message: 'Deletado com sucesso!'
+        });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
