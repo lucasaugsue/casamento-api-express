@@ -1,23 +1,15 @@
-var md5 = require('md5');
-var express = require('express');
-var router = express.Router();
-var { v4: uuidv4 } = require('uuid');
+const express = require('express');
+const router = express.Router();
 
-const CyclicDb = require("@cyclic.sh/dynamodb")
-const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
-
-const users = db.collection("users")
+/* postgres sql */
+require('dotenv').config();
+const { sql } = require('@vercel/postgres');
+const connectionString = process.env.POSTGRES_URL;
 
 router.get('/list', async function(req, res, next) {
 	try{
-		const { results: usersMetadata } = await users.list();
-		const list = await Promise.all(
-			usersMetadata.map(async ({ key }) => (
-				await users.get(key)).props
-			) 
-		);
-
-		res.json(list)
+		const result = await sql`select * from users`;
+		res.json(result.rows)
 
 	}catch(err) {
 		res.send(`Um erro aconteceu: ${err}`)
@@ -25,70 +17,67 @@ router.get('/list', async function(req, res, next) {
 });
 
 router.get('/by/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		let item = await users.get(id)
+    const userId = req.params.id;
 
-		res.json({ item: item })
+    try {
+        const result = await sql`SELECT * FROM users WHERE id = ${userId}`;
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
-	}
-})
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: `Um erro aconteceu: ${err}` });
+    }
+});
 
 router.post('/create', async function(req, res, next) {
-	try{
-		let uuid = uuidv4()
-		let id = md5(uuid)
+    try {
+        const { nome, sexo, idade } = req.body;
+        const item = await sql`INSERT INTO users (sexo, idade, nome) VALUES (${sexo}, ${idade}, ${nome}) RETURNING *`;
 
-		let params = {
-			id: id,
-			...req.body
-		}
+        res.status(201).json({
+            item: item.rows[0],
+            message: 'Criado com sucesso!'
+        });
 
-		await users.set(id, params)
-		let item = await users.get(id)
-
-		res.status(201)
-		res.json({
-			item: item,
-			message: 'Criado com sucesso!'
-		})
-
-	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
-	}
+    } catch (err) {
+        res.status(500).json({ error: `Um erro aconteceu: ${err}` });
+    }
 });
 
 router.patch('/edit/:id', async function(req, res, next) {
-	try{
-		let params = {...req.body}
-		let id = req.params.id
+    const userId = req.params.id;
+    const { nome, sexo, idade } = req.body;
 
-		await users.set(id, params)
-		let item = await users.get(id)
+    try {
+        const result = await sql`UPDATE users SET nome = ${nome}, sexo = ${sexo}, idade = ${idade} WHERE id = ${userId} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
 
-		res.status(200)
-		res.json({
-			item: item,
-			message: 'Editado com sucesso!'
-		})
+		res.json(result.rows[0]);
 
-	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
-	}
+    } catch (err) {
+        res.status(500).json({ error: `Um erro aconteceu: ${err}` });
+    }
 });
 
 router.delete('/delete/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		await users.delete(id)
+    const userId = req.params.id;
 
-		res.json({ message: 'Deletado com sucesso!' })
+    try {
+        const result = await sql`DELETE FROM users WHERE id = ${userId} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`Um erro aconteceu: ${err}`)
-	}
-}); 
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: `Um erro aconteceu: ${err}` });
+    }
+});
 
 module.exports = router;

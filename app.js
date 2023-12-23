@@ -39,11 +39,15 @@ app.use('/confirmar-presenca', confirmarPresencaRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
+	console.log("entrou no 404")
+
   next(createError(404));
 });
 
 // error handler
 app.use(function(err, req, res, next) {
+	console.log("entrou no error handler", err)
+
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
