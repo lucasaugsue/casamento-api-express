@@ -17,10 +17,10 @@ router.get('/list', async function(req, res, next) {
 });
 
 router.get('/by/:id', async function(req, res, next) {
-    const userId = req.params.id;
+    const id = req.params.id;
 
     try {
-        const result = await sql`SELECT * FROM users WHERE id = ${userId}`;
+        const result = await sql`SELECT * FROM users WHERE id = ${id}`;
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Usuário não encontrado.' });
         }
@@ -48,11 +48,11 @@ router.post('/create', async function(req, res, next) {
 });
 
 router.patch('/edit/:id', async function(req, res, next) {
-    const userId = req.params.id;
+    const id = req.params.id;
     const { nome, sexo, idade } = req.body;
 
     try {
-        const result = await sql`UPDATE users SET nome = ${nome}, sexo = ${sexo}, idade = ${idade} WHERE id = ${userId} RETURNING *`;
+        const result = await sql`UPDATE users SET nome = ${nome}, sexo = ${sexo}, idade = ${idade} WHERE id = ${id} RETURNING *`;
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Usuário não encontrado.' });
         }
@@ -65,10 +65,10 @@ router.patch('/edit/:id', async function(req, res, next) {
 });
 
 router.delete('/delete/:id', async function(req, res, next) {
-    const userId = req.params.id;
+    const id = req.params.id;
 
     try {
-        const result = await sql`DELETE FROM users WHERE id = ${userId} RETURNING *`;
+        const result = await sql`DELETE FROM users WHERE id = ${id} RETURNING *`;
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Usuário não encontrado.' });
         }

@@ -1,12 +1,10 @@
-var md5 = require('md5');
-var express = require('express');
-var router = express.Router();
-var { v4: uuidv4 } = require('uuid');
+const express = require('express');
+const router = express.Router();
 
-const CyclicDb = require("@cyclic.sh/dynamodb")
-const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
-
-const recados = db.collection("recados")
+/* postgres sql */
+require('dotenv').config();
+const { sql } = require('@vercel/postgres');
+const connectionString = process.env.POSTGRES_URL;
 
 function validacaoRecados (params) {
 	try{
@@ -24,110 +22,87 @@ function validacaoRecados (params) {
 
 router.get('/list', async function(req, res, next) {
 	try{
-		const { results: recadosMetadata } = await recados.list();
-		const list = await Promise.all(
-			recadosMetadata.map(async ({ key }) => (
-				await recados.get(key)).props
-			) 
-		);
-
-		res.json(list)
+		const result = await sql`select * from recados`;
+		res.json(result.rows)
 
 	}catch(err) {
-		res.send(`${err}`)
+        res.status(500).json({ error: err.message });
 	}
 });
 
 router.get('/by/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		let item = (await recados.get(id)).props
+    const id = req.params.id;
 
-		res.json({ item: item })
+    try {
+        const result = await sql`SELECT * FROM recados WHERE id = ${id}`;
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Recado não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
-})
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.post('/create', async function(req, res, next) {
-	try{
-		let uuid = uuidv4()
-		let id = md5(uuid)
+	try {
+		const { nome, email, recado } = req.body;
 
-		let params = {...req.body}
 		let validacao = {error: false, msg: ""}
 
-		params = {
-			id: id,
-			nome: params.nome || "",
-			email: params.email || "",
-			recado: params.recado || "",
-		}
-
-		validacao = validacaoRecados(params)
+		validacao = validacaoRecados(req.body)
 		if(validacao.error) throw new Error(validacao.msg)
-		
-		await recados.set(id, params)
-		let item = await recados.get(id)
 
-		res.status(201)
-		res.json({
-			item: item,
-			message: 'Criado com sucesso!'
-		})
+        const item = await sql`INSERT INTO recados (email, recado, nome) VALUES (${email}, ${recado}, ${nome}) RETURNING *`;
 
-	}catch(err) {
-		res.send(`${err.message}`)
-	}
+        res.status(201).json({
+            item: item.rows[0],
+            message: 'Criado com sucesso!'
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.patch('/edit/:id', async function(req, res, next) {
-	try{
-		let params = {...req.body}
-		let id = req.params.id
+	try {
+		const id = req.params.id;
+		const { nome, email, recado } = req.body;
+
 		let validacao = {error: false, msg: ""}
 
-		let item = await recados.get(id)
-		if(!item) throw new Error("Não foi possível encontrar o id para editar!")
-
-		params = {
-			id: id,
-			nome: params.nome || "",
-			email: params.email || "",
-			recado: params.recado || "",
-		}
-		
-		validacao = validacaoRecados(params)
+		validacao = validacaoRecados(req.body)
 		if(validacao.error) throw new Error(validacao.msg)
 
-		await recados.set(id, params)
+        const result = await sql`UPDATE recados SET nome = ${nome}, email = ${email}, recado = ${recado} WHERE id = ${id} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Recado não encontrado.' });
+        }
 
-		res.status(200)
-		res.json({
-			item: item,
-			message: 'Editado com sucesso!'
-		})
+		res.json(result.rows[0]);
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.delete('/delete/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		
-		let item = await recados.get(id)
-		if(!item) throw new Error("Não foi possível encontrar o id para deletar!")
-		
-		await recados.delete(id)
+    const id = req.params.id;
 
-		res.json({ message: 'Deletado com sucesso!' })
+    try {
+        const result = await sql`DELETE FROM recados WHERE id = ${id} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Recado não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
-}); 
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = router;

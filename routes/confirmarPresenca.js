@@ -1,12 +1,10 @@
-var md5 = require('md5');
-var express = require('express');
-var router = express.Router();
-var { v4: uuidv4 } = require('uuid');
+const express = require('express');
+const router = express.Router();
 
-const CyclicDb = require("@cyclic.sh/dynamodb")
-const db = CyclicDb("drab-cyan-cockatoo-wrapCyclicDB")
-
-const confirmar_presenca = db.collection("confirmar_presenca")
+/* postgres sql */
+require('dotenv').config();
+const { sql } = require('@vercel/postgres');
+const connectionString = process.env.POSTGRES_URL;
 
 function validacaoConfirmarPresenca (params) {
 	try{
@@ -24,110 +22,87 @@ function validacaoConfirmarPresenca (params) {
 
 router.get('/list', async function(req, res, next) {
 	try{
-		const { results: confirmarPresencaMetadata } = await confirmar_presenca.list();
-		const list = await Promise.all(
-			confirmarPresencaMetadata.map(async ({ key }) => (
-				await confirmar_presenca.get(key)).props
-			) 
-		);
-
-		res.json(list)
+		const result = await sql`select * from confirmar_presenca`;
+		res.json(result.rows)
 
 	}catch(err) {
-		res.send(`${err}`)
+        res.status(500).json({ error: err.message });
 	}
 });
 
 router.get('/by/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		let item = (await confirmar_presenca.get(id)).props
+    const id = req.params.id;
 
-		res.json({ item: item })
+    try {
+        const result = await sql`SELECT * FROM confirmar_presenca WHERE id = ${id}`;
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Presença não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
-})
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 router.post('/create', async function(req, res, next) {
-	try{
-		let uuid = uuidv4()
-		let id = md5(uuid)
+	try {
+		const { nome, idade, celular } = req.body;
 
-		let params = {...req.body}
 		let validacao = {error: false, msg: ""}
 
-		params = {
-			id: id,
-			nome: params.nome || "",
-			idade: params.idade || "",
-			celular: params.celular || "",
-		}
-
-		validacao = validacaoConfirmarPresenca(params)
+		validacao = validacaoConfirmarPresenca(req.body)
 		if(validacao.error) throw new Error(validacao.msg)
-		
-		await confirmar_presenca.set(id, params)
-		let item = await confirmar_presenca.get(id)
 
-		res.status(201)
-		res.json({
-			item: item,
-			message: 'Criado com sucesso!'
-		})
+        const item = await sql`INSERT INTO confirmar_presenca (idade, celular, nome) VALUES (${idade}, ${celular}, ${nome}) RETURNING *`;
 
-	}catch(err) {
-		res.send(`${err.message}`)
-	}
+        res.status(201).json({
+            item: item.rows[0],
+            message: 'Criado com sucesso!'
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.patch('/edit/:id', async function(req, res, next) {
-	try{
-		let params = {...req.body}
-		let id = req.params.id
+	try {
+		const id = req.params.id;
+		const { nome, idade, celular } = req.body;
+
 		let validacao = {error: false, msg: ""}
 
-		let item = await confirmar_presenca.get(id)
-		if(!item) throw new Error("Não foi possível encontrar o id para editar!")
-		// console.log("item", item)
-
-		params = {
-			id: id,
-			nome: params.nome || "",
-			idade: params.idade || "",
-			celular: params.celular || "",
-		}
-		
-		validacao = validacaoConfirmarPresenca(params)
+		validacao = validacaoConfirmarPresenca(req.body)
 		if(validacao.error) throw new Error(validacao.msg)
 
-		await confirmar_presenca.set(id, params)
+        const result = await sql`UPDATE confirmar_presenca SET nome = ${nome}, idade = ${idade}, celular = ${celular} WHERE id = ${id} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Presença não encontrado.' });
+        }
 
-		res.json({
-			item: item,
-			message: 'Editado com sucesso!'
-		})
+		res.json(result.rows[0]);
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.delete('/delete/:id', async function(req, res, next) {
-	try{
-		let id = req.params.id
-		
-		let item = await confirmar_presenca.get(id)
-		if(!item) throw new Error("Não foi possível encontrar o id para deletar!")
-		
-		await confirmar_presenca.delete(id)
+    const id = req.params.id;
 
-		res.json({ message: 'Deletado com sucesso!' })
+    try {
+        const result = await sql`DELETE FROM confirmar_presenca WHERE id = ${id} RETURNING *`;
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Presença não encontrado.' });
+        }
 
-	}catch(err) {
-		res.send(`${err}`)
-	}
-}); 
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 module.exports = router;
